@@ -1,28 +1,36 @@
 <?php
+
 namespace Services;
 
-use Models\User;
 use Repositories\UserRepository;
 
 class AuthService {
-    private $userRepo;
+    private $userRepository;
 
-    public function __construct(UserRepository $userRepo) {
-        $this->userRepo = $userRepo;
+    public function __construct(UserRepository $userRepository) {
+        $this->userRepository = $userRepository;
     }
 
-    public function register($data) {
-        // Validación y encriptación de contraseña
-        $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
-        return $this->userRepo->save($data);
-    }
+    /**
+     * Verifica las credenciales del usuario.
+     *
+     * @param string $email El correo electrónico del usuario.
+     * @param string $password La contraseña del usuario.
+     * @return bool Retorna true si la autenticación es exitosa, false en caso contrario.
+     */
+    public function authenticate(string $email, string $password) {
+        // Buscar al usuario en la base de datos
+        $user = $this->userRepository->getUserByEmail($email);
 
-    public function login($email, $password) {
-        $user = $this->userRepo->findByEmail($email);
-        if ($user && password_verify($password, $user['password'])) {
-            return bin2hex(random_bytes(16)); // Token simple
+        if ($user === null) {
+            throw new \Exception("Usuario no encontrado.");
         }
-        return null;
+
+        // Verificar si la contraseña es correcta
+        if (password_verify($password, $user['password'])) {
+            return true;
+        }
+
+        throw new \Exception("Contraseña incorrecta.");
     }
 }
-?>

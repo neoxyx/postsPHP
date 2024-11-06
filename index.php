@@ -11,6 +11,7 @@ use Repositories\UserRepository;
 use Repositories\PostRepository;
 use Services\UserService;
 use Services\PostService;
+use Services\AuthService;
 
 // Obtener la conexión a la base de datos
 $database = new Database();
@@ -22,9 +23,10 @@ $postRepository = new PostRepository($pdo);
 
 $userService = new UserService($userRepository);
 $postService = new PostService($postRepository);
+$authService = new AuthService($userRepository);  // Instancia de AuthService
 
 // Controladores
-$authController = new AuthController($userService);
+$authController = new AuthController($authService, $userService);  // Pasamos AuthService en lugar de UserService
 $postController = new PostController($postService);
 
 // Función para obtener el método HTTP y la ruta de la solicitud
@@ -48,11 +50,11 @@ switch ($method) {
             $postController->createPost($data);
         }
         break;
-    
+
     case 'GET':
         if (preg_match('/^api\/posts\/(\d+)$/', $request, $matches)) {
             // Ruta para listar todos los posts de una categoría
-            $categoryId = (int)$matches[1];
+            $categoryId = (int) $matches[1];
             $postController->getPostsByCategory($categoryId);
         }
         break;
@@ -63,4 +65,3 @@ switch ($method) {
         echo json_encode(['message' => 'Ruta no encontrada']);
         break;
 }
-?>

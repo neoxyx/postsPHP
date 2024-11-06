@@ -4,61 +4,54 @@ namespace Repositories;
 
 use PDO;
 
-class UserRepository {
-    private $db;
+class UserRepository
+{
+    private $pdo;
 
-    public function __construct(PDO $db) {
-        $this->db = $db;
+    public function __construct(PDO $pdo)
+    {
+        $this->pdo = $pdo;
     }
 
     /**
-     * Registrar un nuevo usuario
-     * @param array $data
-     * @return bool
+     * Registrar un nuevo usuario en la base de datos.
+     *
+     * @param string $name El nombre del usuario.
+     * @param string $email El correo electrónico del usuario.
+     * @param string $password La contraseña encriptada del usuario.
+     * @return bool Retorna true si el registro fue exitoso, false en caso contrario.
      */
-    public function register(array $data): bool {
-        $query = "INSERT INTO users (name, email, password) VALUES (:name, :email, :password)";
-        $stmt = $this->db->prepare($query);
-        
-        // Ejecuta la consulta con los datos proporcionados
-        return $stmt->execute([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => password_hash($data['password'], PASSWORD_BCRYPT)  // Encriptar la contraseña
-        ]);
-    }
-
-    /**
-     * Autenticar usuario por email y password
-     * @param string $email
-     * @param string $password
-     * @return array|null
-     */
-    public function authenticate(string $email, string $password): ?array {
-        $query = "SELECT * FROM users WHERE email = :email";
-        $stmt = $this->db->prepare($query);
+    public function register($name, $email, $password)
+    {
+        // Verificar si el email ya está registrado
+        $stmt = $this->pdo->prepare("SELECT id FROM users WHERE email = :email");
         $stmt->execute(['email' => $email]);
-        
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Verificar si el usuario existe y si la contraseña es válida
-        if ($user && password_verify($password, $user['password'])) {
-            return $user;  // Autenticación exitosa, devolver datos del usuario
+        if ($stmt->fetch()) {
+            throw new \Exception("El correo electrónico ya está registrado.");
         }
-        
-        return null;  // Autenticación fallida
+
+        // Intentar insertar el nuevo usuario
+        try {
+            $stmt = $this->pdo->prepare("INSERT INTO users (name, email, password) VALUES (:name, :email, :password)");
+            $stmt->execute(['name' => $name, 'email' => $email, 'password' => $password]);
+            return true;
+        } catch (\PDOException $e) {
+            throw new \Exception("Error al registrar el usuario: " . $e->getMessage());
+        }
     }
 
+
     /**
-     * Verificar si un email ya está registrado
-     * @param string $email
-     * @return bool
+     * Obtener un usuario por su correo electrónico.
+     *
+     * @param string $email El correo electrónico del usuario.
+     * @return array|null El usuario si existe, o null si no se encuentra.
      */
-    public function isEmailRegistered(string $email): bool {
-        $query = "SELECT COUNT(*) FROM users WHERE email = :email";
-        $stmt = $this->db->prepare($query);
+    public function getUserByEmail($email)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE email = :email");
         $stmt->execute(['email' => $email]);
-        
-        return $stmt->fetchColumn() > 0;  // Retorna true si el email ya existe
+        return $stmt->fetch();
     }
 }

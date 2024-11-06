@@ -1,61 +1,36 @@
 <?php
+
 namespace Controllers;
 
 use Services\AuthService;
+use Services\UserService;
 
 class AuthController {
     private $authService;
+    private $userService;
 
-    public function __construct(AuthService $authService) {
+    public function __construct(AuthService $authService, UserService $userService) {
         $this->authService = $authService;
+        $this->userService = $userService;
     }
 
-    /**
-     * Handle user registration
-     */
-    public function register($request) {
-        $data = [
-            'name' => $request['name'],
-            'email' => $request['email'],
-            'password' => $request['password']
-        ];
-
-        $result = $this->authService->register($data);
-
-        if ($result) {
-            return [
-                'status' => 'success',
-                'message' => 'User registered successfully.'
-            ];
-        } else {
-            return [
-                'status' => 'error',
-                'message' => 'User registration failed.'
-            ];
+    public function register($data) {
+        try {
+            $this->userService->registerUser($data);
+            echo json_encode(["message" => "Usuario registrado exitosamente."]);
+        } catch (\Exception $e) {
+            http_response_code(400);
+            echo json_encode(["error" => $e->getMessage()]);
         }
     }
 
-    /**
-     * Handle user login
-     */
-    public function login($request) {
-        $email = $request['email'];
-        $password = $request['password'];
-
-        $token = $this->authService->login($email, $password);
-
-        if ($token) {
-            return [
-                'status' => 'success',
-                'message' => 'Login successful.',
-                'token' => $token
-            ];
-        } else {
-            return [
-                'status' => 'error',
-                'message' => 'Invalid credentials.'
-            ];
+    public function login($data) {
+        try {
+            $this->authService->authenticate($data['email'], $data['password']);
+            echo json_encode(["message" => "Inicio de sesión exitoso."]);
+        } catch (\Exception $e) {
+            http_response_code(400);
+            echo json_encode(["error" => $e->getMessage()]);
         }
     }
 }
-?>
