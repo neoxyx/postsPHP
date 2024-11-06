@@ -11,11 +11,10 @@ class PostController {
     }
 
     public function createPost($data) {
-        return $this->postService->create($data);
+        return $this->postService->createPost($data);
     }
 
     public function getPostsByCategory($categoryId) {
-        return $this->postService->getByCategory($categoryId);
+        return $this->postService->getPostsByCategory($categoryId);
     }
 }
-?>
