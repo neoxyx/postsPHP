@@ -2,6 +2,9 @@
 
 require 'vendor/autoload.php';
 
+// Cargar el archivo de configuración de la base de datos
+require_once 'config/db.php';
+
 use Controllers\AuthController;
 use Controllers\PostController;
 use Repositories\UserRepository;
@@ -9,20 +12,9 @@ use Repositories\PostRepository;
 use Services\UserService;
 use Services\PostService;
 
-// Configuración de la conexión a la base de datos (modificar según sea necesario)
-$dsn = 'mysql:host=localhost;dbname=nombre_de_tu_base_de_datos;charset=utf8';
-$username = 'tu_usuario';
-$password = 'tu_contraseña';
-$options = [
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-];
-
-try {
-    $pdo = new PDO($dsn, $username, $password, $options);
-} catch (PDOException $e) {
-    die('Error al conectar con la base de datos: ' . $e->getMessage());
-}
+// Obtener la conexión a la base de datos
+$database = new Database();
+$pdo = $database->getConnection();
 
 // Instancias de repositorios y servicios
 $userRepository = new UserRepository($pdo);
@@ -71,5 +63,4 @@ switch ($method) {
         echo json_encode(['message' => 'Ruta no encontrada']);
         break;
 }
-
 ?>
