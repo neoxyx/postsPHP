@@ -26,7 +26,7 @@ class AuthController {
 
     public function login($data) {
         try {
-            $this->authService->authenticate($data['email'], $data['password']);
+            $user = $this->authService->authenticate($data['email'], $data['password']);
             echo json_encode(["message" => "Inicio de sesión exitoso."]);
         } catch (\Exception $e) {
             http_response_code(400);

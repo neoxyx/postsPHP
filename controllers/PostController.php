@@ -1,4 +1,5 @@
 <?php
+
 namespace Controllers;
 
 use Services\PostService;
@@ -11,10 +12,12 @@ class PostController {
     }
 
     public function createPost($data) {
-        return $this->postService->createPost($data);
-    }
-
-    public function getPostsByCategory($categoryId) {
-        return $this->postService->getPostsByCategory($categoryId);
+        if (empty($data['user_id']) || empty($data['content'])) {
+            http_response_code(400);
+            echo json_encode(["error" => "Datos incompletos"]);
+            return;
+        }
+        $this->postService->createPost($data['user_id'], $data['content']);
+        echo json_encode(["message" => "Post creado exitosamente."]);
     }
 }

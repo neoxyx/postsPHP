@@ -11,26 +11,11 @@ class AuthService {
         $this->userRepository = $userRepository;
     }
 
-    /**
-     * Verifica las credenciales del usuario.
-     *
-     * @param string $email El correo electrónico del usuario.
-     * @param string $password La contraseña del usuario.
-     * @return bool Retorna true si la autenticación es exitosa, false en caso contrario.
-     */
-    public function authenticate(string $email, string $password) {
-        // Buscar al usuario en la base de datos
+    public function authenticate($email, $password) {
         $user = $this->userRepository->getUserByEmail($email);
-
-        if ($user === null) {
-            throw new \Exception("Usuario no encontrado.");
+        if (!$user || !password_verify($password, $user['password'])) {
+            throw new \Exception("Credenciales inválidas");
         }
-
-        // Verificar si la contraseña es correcta
-        if (password_verify($password, $user['password'])) {
-            return true;
-        }
-
-        throw new \Exception("Contraseña incorrecta.");
+        return $user;
     }
 }
